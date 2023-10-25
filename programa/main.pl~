@@ -369,7 +369,7 @@ str_to_int(Str, Int) :-
 
 % =============================validaciones==================================
 
-%Imprime las tareas.
+
 imprimir_tarea :-
     tarea(Nombre, Proyecto, Tipo, Estado, Persona, Fecha_inicio, Fecha_fin),
     write('Nombre: '), writeln(Nombre),
@@ -383,7 +383,7 @@ imprimir_tarea :-
     fail.
 imprimir_tarea :- true.
 
-%cuenta la cantidad de proyectos existentes.
+
 cantidad_proyectos(Cantidad) :-
     findall(_, proyecto(_,_,_,_,_), Proyectos),
     length(Proyectos, Cantidad).
