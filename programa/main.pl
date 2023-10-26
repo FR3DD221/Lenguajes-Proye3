@@ -361,6 +361,12 @@ validar_tarea(_, _, Tarea, _) :-
     writeln('!!Error -> Este tipo de tarea no existe. <- Error!!'), !, not(true).
 %valida la fecha de ingreso de la tarea.
 validar_tarea(_, _, _, Fecha) :- not(validar_fecha(Fecha)), writeln('!!Error -> La fecha no es valida <- Error!!'), !, not(true).
+%valida que este en el rango.
+validar_tarea(_, Proyecto, _, Fecha) :-
+    extraer_fecha_proyecto(Proyecto, Fecha_i, Fecha_f),
+    not(validar_vigencia_fecha(Fecha, Fecha_i, Fecha_f)),
+    writeln('!!Error -> La fecha no esta dentro del rango de las fechas del proyecto <- Error!!\n'), !, not(true).
+
 %Paso correctamente todas las validaciones.
 validar_tarea(_, _, _, _):- true.
 
@@ -371,12 +377,18 @@ guardar_tarea(Nombre, Proyecto, Tipo, Estado, Persona, Fecha_inicio, Fecha_final
     close(Stream).
 
 % =============================validaciones==================================
-% Funci�n para verificar si la empresa existe
+% Funcion para verificar si la empresa existe
 existe_empresa(Nombre) :-
     proyecto(Nombre, _, _, _, _), !.
-%Funci�n para verificar si la empresa existe
+%Funcion para verificar si la empresa existe
 existe_tarea(Nombre) :-
     tarea(Nombre, _, _, _, _, _, _), !.
+
+% Funcion para extraer las fechas
+extraer_fecha_proyecto(Nombre, Fecha_i, Fecha_f) :-
+    proyecto(Nombre, _, _, Fecha1, Fecha2),
+    Fecha_i = Fecha1,
+    Fecha_f = Fecha2.
 
 %Funcion para validar la fecha.
 validar_fecha(Fecha) :-
@@ -460,7 +472,7 @@ cerrarTareaAux(Proyecto, _, _):- not(proyecto(Proyecto, _, _, _, _)),
 cerrarTareaAux(_, Tarea, _):- not(tarea(Tarea, _, _, _, _, _, _)),
     writeln('!!Error -> la tarea ingresada no existe <- Error!!'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, _):- tarea(Tarea, Proyecto, _, _, Persona, _, _), string_lower(Persona, "finalizada"),
+cerrarTareaAux(Proyecto, Tarea, _):- tarea(Tarea, Proyecto, _, Estado, _, _, _), string_lower(Estado, "finalizada"),
     writeln('!!Error -> la tarea ya ha sido cerrada <- Error!!'), nl.
 
 cerrarTareaAux(_, _, FechaCierre):- not(validar_fecha(FechaCierre)),
@@ -629,6 +641,7 @@ existe_trabajador(Nombre) :-
 imprimir_tarea_filtro(Lista) :-
     tarea(Nombre, Proyecto, Tipo, Estado, Persona, Fecha_inicio, Fecha_fin),
     member(Tipo, Lista),
+    cadena_contenida(Persona, "no asignada"),
     write('Nombre: '), writeln(Nombre),
     write('Proyecto: '), writeln(Proyecto),
     write('Tipo de tareas: '), writeln(Tipo),
@@ -702,3 +715,22 @@ tareas_abiertas(Persona, Contador) :-
 extraer_tipo(Tarea, Res):-
     tarea(Tarea, _, Tipo, _, _, _, _),
     Res = Tipo.
+
+
+validar_vigencia_fecha(Fecha_validar, Fecha_inicio, Fecha_fin) :-
+    % Split de las fechas de inicio y fin
+    split_string(Fecha_inicio, "-", "", Lista1),
+    split_string(Fecha_fin, "-", "", Lista2),
+    split_string(Fecha_validar, "-", "", Lista3),
+    %
+    maplist(str_to_int, Lista1, [Day_i, Month_i, Year_i]), %convertimos la lista generada a numeros enteros con el mapeo.
+    maplist(str_to_int, Lista2, [Day_f, Month_f, Year_f]),
+    maplist(str_to_int, Lista3, [Day_v, Month_v, Year_v]),
+
+    %realizamos las comparaciones.
+    fecha_mayor_o_igual(Year_v, Month_v, Day_v, Year_i, Month_i, Day_i),
+
+    fecha_mayor_o_igual(Year_f, Month_f, Day_f, Year_v, Month_v, Day_v).
+
+fecha_mayor_o_igual(Year1, Month1, Day1, Year2, Month2, Day2) :-
+    (Year1 > Year2; (Year1 = Year2, (Month1 > Month2; (Month1 = Month2, Day1 >= Day2)))).
