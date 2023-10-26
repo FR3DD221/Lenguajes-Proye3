@@ -47,6 +47,8 @@ menu:-
     writeln('1. Gestion de personas'),
     writeln('2. Gestion de proyectos'),
     writeln('3. Gestion de tareas'),
+    writeln('4. Buscar tareas'),
+    writeln('5. Recomendaciones'),
     writeln('6. Asignar tarea'),
     writeln('7. Cerrar tarea'),
     writeln('9. Salir'),
@@ -57,6 +59,8 @@ menu:-
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "1"), menuPersona, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "2"), menuProyecto, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "3"), menu_tarea, menu.
+comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "4"), menu_buscar_tarea, menu.
+comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "5"), menu_recomendar, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "6"), asignarTarea, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "7"), cerrarTarea, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "9").
@@ -84,7 +88,7 @@ imprimirPersonas :-
     nl, not(true).
 imprimirPersonas :- true.
 
-imprimirPersonasAux(Nombre):- 
+imprimirPersonasAux(Nombre):-
     tarea(Tarea, Proyecto, _, _, Nombre, _, _),
     write('Nombre de la tarea: '), writeln(Tarea),
     write('Nombre del proyecto: '), writeln(Proyecto),
@@ -426,13 +430,13 @@ asignarTarea:- write('Ingrese el nombre del proyecto: '), read_line_to_string(us
     write('Nombre de la persona a asignar: '), read_line_to_string(user_input, Persona), nl,
     asignarTareaAux(Proyecto, Tarea, Persona).
 
-asignarTareaAux(Proyecto, _, _):- not(proyecto(Proyecto, _, _, _, _)), 
+asignarTareaAux(Proyecto, _, _):- not(proyecto(Proyecto, _, _, _, _)),
     writeln('!!Error -> el proyecto ingresado no existe <- Error!!'), nl.
 
-asignarTareaAux(_, Tarea, _):- not(tarea(Tarea, _, _, _, _, _, _)), 
+asignarTareaAux(_, Tarea, _):- not(tarea(Tarea, _, _, _, _, _, _)),
     writeln('!!Error -> la tarea ingresada no existe <- Error!!'), nl.
 
-asignarTareaAux(_, _, Persona):- not(persona(Persona, _, _, _, _)), 
+asignarTareaAux(_, _, Persona):- not(persona(Persona, _, _, _, _)),
     writeln('!!Error -> la persona no existe <- Error!!'), nl.
 
 asignarTareaAux(Proyecto, Tarea, _):- not(tarea(Tarea, Proyecto, _, _, _, _, _)),
@@ -441,7 +445,7 @@ asignarTareaAux(Proyecto, Tarea, _):- not(tarea(Tarea, Proyecto, _, _, _, _, _))
 asignarTareaAux(Proyecto, Tarea, _):- tarea(Tarea, Proyecto, _, _, Persona, _, _), not(string_lower(Persona, "no asignada")),
     writeln('!!Error -> la tarea ya tiene encargado <- Error!!'), nl.
 
-asignarTareaAux(Proyecto, Tarea, Persona):- retract(tarea(Tarea, Proyecto, Tipo, _, _, Fecha_inicio, Fecha_final)), 
+asignarTareaAux(Proyecto, Tarea, Persona):- retract(tarea(Tarea, Proyecto, Tipo, _, _, Fecha_inicio, Fecha_final)),
     asserta(tarea(Tarea, Proyecto, Tipo, 'activa', Persona, Fecha_inicio, Fecha_final)), writeln('Tarea asignada con exito!!'), nl.
 
 %Funcion que se encargar de pedir los datos para cerrar una tarea, ademas los valida
@@ -450,16 +454,16 @@ cerrarTarea:- write('Ingrese el nombre del proyecto: '), read_line_to_string(use
     write('Fecha de cierre (Formato DD-MM-YYYY): '), read_line_to_string(user_input, FechaCierre), nl,
     cerrarTareaAux(Proyecto, Tarea, FechaCierre).
 
-cerrarTareaAux(Proyecto, _, _):- not(proyecto(Proyecto, _, _, _, _)), 
+cerrarTareaAux(Proyecto, _, _):- not(proyecto(Proyecto, _, _, _, _)),
     writeln('!!Error -> el proyecto ingresado no existe <- Error!!'), nl.
 
-cerrarTareaAux(_, Tarea, _):- not(tarea(Tarea, _, _, _, _, _, _)), 
+cerrarTareaAux(_, Tarea, _):- not(tarea(Tarea, _, _, _, _, _, _)),
     writeln('!!Error -> la tarea ingresada no existe <- Error!!'), nl.
 
 cerrarTareaAux(Proyecto, Tarea, _):- tarea(Tarea, Proyecto, _, _, Persona, _, _), string_lower(Persona, "finalizada"),
     writeln('!!Error -> la tarea ya ha sido cerrada <- Error!!'), nl.
 
-cerrarTareaAux(_, _, FechaCierre):- not(validar_fecha(FechaCierre)), 
+cerrarTareaAux(_, _, FechaCierre):- not(validar_fecha(FechaCierre)),
     writeln('!!Error -> la fecha no sigue el formato especificado <- Error!!'), nl.
 
 cerrarTareaAux(Proyecto, Tarea, FechaCierre):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _), substring(Anio2, 6, 4, FechaIni),
@@ -467,9 +471,9 @@ cerrarTareaAux(Proyecto, Tarea, FechaCierre):- tarea(Tarea, Proyecto, _, _, _, F
     Number2 > Number1,
     writeln('!!Error -> la fecha de cierre no puede ser menor que la de inicio <- Error!!'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _), 
+cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
-    atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 > Number2, 
+    atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 > Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
     atom_number(Cadena3, Number3), atom_number(Cadena4, Number4), Number3 >= Number4,
     substring(Cadena5, 6, 4,FechaIni), substring(Cadena6, 6, 4,FechaFin),
@@ -477,7 +481,7 @@ cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, Fech
     not(Number6 < Number5),
     writeln('Formato invalido -> La fecha de inicio no puede ser mayor a la fecha de fin'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _), 
+cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 < Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -487,7 +491,7 @@ cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, Fech
     not(Number6 < Number5),
     writeln('Formato invalido -> La fecha de inicio no puede ser mayor a la fecha de fin'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _), 
+cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 = Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -498,9 +502,9 @@ cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, Fech
     writeln('Formato invalido -> La fecha de inicio no puede ser mayor o igual a la fecha de fin'), nl.
 
 
-cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni), 
+cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
-    atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 > Number2, 
+    atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 > Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
     atom_number(Cadena3, Number3), atom_number(Cadena4, Number4), Number3 >= Number4,
     substring(Cadena5, 6, 4,FechaIni), substring(Cadena6, 6, 4,FechaFin),
@@ -508,7 +512,7 @@ cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     not(Number6 >= Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser mayor a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni), 
+cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 < Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -518,7 +522,7 @@ cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     not(Number6 >= Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser mayor a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni), 
+cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 < Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -528,7 +532,7 @@ cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     (Number6 = Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser mayor a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni), 
+cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 = Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -538,7 +542,7 @@ cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     (Number6 = Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser igual a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, _, FechaIni):- proyecto(Proyecto, _, _, _, FechaIni), 
+cerrarTareaAux(Proyecto, _, FechaIni):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 = Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
@@ -548,5 +552,153 @@ cerrarTareaAux(Proyecto, _, FechaIni):- proyecto(Proyecto, _, _, _, FechaIni),
     not(Number6 >= Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser mayor o igual a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, FechaFin):- retract(tarea(Tarea, Proyecto, Tipo, _, Persona, Fecha_inicio, _)), 
+cerrarTareaAux(Proyecto, Tarea, FechaFin):- retract(tarea(Tarea, Proyecto, Tipo, _, Persona, Fecha_inicio, _)),
     asserta(tarea(Tarea, Proyecto, Tipo, 'finalizada', Persona, Fecha_inicio, FechaFin)), writeln('Tarea cerrada con exito!!'), nl.
+
+%============================Commit
+%===============================
+%menu tareas.
+menu_buscar_tarea:-
+    writeln('1. Buscar tareas'),
+    writeln('2. Buscar tareas por trabajador'),
+    writeln('3. Volver'),
+    write('Ingrese su opcion: '),
+    read_line_to_string(user_input, Opcion), comprobar_opcion_buscar_tarea(Opcion).
+
+%Funcion auxiliar para comprobar que la opcion ingresada por el usuario el correcta
+comprobar_opcion_buscar_tarea(Opcion):- string_lower(Opcion, "1"), buscar_tarea, !, menu_buscar_tarea.
+comprobar_opcion_buscar_tarea(Opcion):- string_lower(Opcion, "2"), buscar_tarea_trabajador, !, menu_buscar_tarea.
+comprobar_opcion_buscar_tarea(Opcion):- string_lower(Opcion, "3"), !.
+comprobar_opcion_buscar_tarea(_):- writeln('Opcion invalida. Por favor, ingrese una opcion valida.'), menu_buscar_tarea.
+%
+buscar_tarea :-
+    writeln('\nIngrese la tarea que desea buscar. # si desea ver todas.'),
+    read_line_to_string(user_input, Texto),
+    nl,
+    buscar_tarea_aux(Texto).
+%funcuin auxiliar para la busqueda de tareas.
+buscar_tarea_aux(Texto) :- comparar_cadenas(Texto, "#"), imprimir_tarea, !.
+buscar_tarea_aux(Texto) :- imprimir_tarea_filtrada(Texto).
+
+%Se encarga de comparar las cadenas y definir si son iguales.
+comparar_cadenas(Str1, Str2) :-
+    string_codes(Str1, Code1),
+    string_codes(Str2, Code2),
+    (Code1 = Code2 -> Result is 1; Result is 0),
+    Result =:= 1.
+
+% Se encarga de comparar las cadenas y definir si la primera esta
+% contenida en la segunda.
+cadena_contenida(Subcadena, Cadena) :-
+    sub_string(Cadena, _, _, _, Subcadena).
+
+%Se encarga de imprimir las tareas con un filtro.
+imprimir_tarea_filtrada(Filtro) :-
+    tarea(Nombre, Proyecto, Tipo, Estado, Persona, Fecha_inicio, Fecha_fin),
+    string_lower(Filtro, Filtro_lower),
+    string_lower(Nombre, Nombre_lower),
+    cadena_contenida(Filtro_lower, Nombre_lower),
+    write('Nombre: '), writeln(Nombre),
+    write('Proyecto: '), writeln(Proyecto),
+    write('Tipo de tareas: '), writeln(Tipo),
+    write('Estado: '), writeln(Estado),
+    write('Encargado: '), writeln(Persona),
+    write('Fecha de inicio: '), writeln(Fecha_inicio),
+    write('Fecha de finalizacion: '), writeln(Fecha_fin),
+    write('\n'),
+    fail.
+imprimir_tarea_filtrada(_) :- true.
+
+
+buscar_tarea_trabajador :-
+    writeln('\nIngrese el nombre del trabajador que desea buscar.'),
+    read_line_to_string(user_input, Nombre),
+    buscar_tarea_trabajador_aux(Nombre).
+
+%funcion auxiliar para la busqueda de tareas por trabajador.
+buscar_tarea_trabajador_aux(Nombre) :- not(existe_trabajador(Nombre)), writeln("El trabajador no existe, ingrese uno valido.\n"), !.
+%
+buscar_tarea_trabajador_aux(Nombre) :- persona(Nombre, _, _, _, Lista), imprimir_tarea_filtro(Lista).
+
+%persona(Nombre, Puesto, Costo, Rating, Lista),
+%Funcion para verificar si el trabajador existe
+existe_trabajador(Nombre) :-
+    persona(Nombre, _, _, _, _), !.
+
+%Imprime las tareas con filtro.
+imprimir_tarea_filtro(Lista) :-
+    tarea(Nombre, Proyecto, Tipo, Estado, Persona, Fecha_inicio, Fecha_fin),
+    member(Tipo, Lista),
+    write('Nombre: '), writeln(Nombre),
+    write('Proyecto: '), writeln(Proyecto),
+    write('Tipo de tareas: '), writeln(Tipo),
+    write('Estado: '), writeln(Estado),
+    write('Encargado: '), writeln(Persona),
+    write('Fecha de inicio: '), writeln(Fecha_inicio),
+    write('Fecha de finalizacion: '), writeln(Fecha_fin),
+    write('\n'),
+    fail.
+imprimir_tarea_filtro(_) :- true.
+
+
+
+%menu recomendaciones.
+menu_recomendar:-
+    writeln('Ingrese el nombre del proyecto'),
+    read_line_to_string(user_input, Proyecto),
+    writeln('Ingrese el nombre de la tarea'),
+    read_line_to_string(user_input, Tarea),
+    validar_recomendaciones(Proyecto, Tarea).
+
+%valida la existencia del proyecto.
+validar_recomendaciones(Proyecto, _) :- not(existe_empresa(Proyecto)), writeln("El proyecto no existe.\n"), !.
+%valida la existencia de la tarea.
+validar_recomendaciones(_, Tarea) :- not(existe_tarea(Tarea)), writeln("La tarea no existe.\n"), !.
+%Extrae el tipo de la tarea y lo envia por parametro.
+validar_recomendaciones(Proyecto, Tarea) :-
+    extraer_tipo(Tarea, Tipo),
+    mostrar_trabajadores_Puntaje(Proyecto, Tipo) , !.
+
+
+mostrar_trabajadores_Puntaje(Proyecto, Tipo) :-
+    persona(Persona, Puesto, Costo, _, Lista),
+    member(Tipo, Lista),
+
+    desarrollo_previo(Persona, Tipo, DP),
+    afinidad_proyecto(Persona, Proyecto, AP),
+    rating(Persona, Rating),
+    tareas_abiertas(Persona, TA),
+    Suma is (DP * 2) + (AP * 5) + Rating - (TA * 3),
+
+    write('Nombre: '), writeln(Persona),
+    write('Puesto: '), writeln(Puesto),
+    write('Costo: '), writeln(Costo),
+    write('Rating: '), writeln(Rating),
+    write('Puntaje resultado: '), writeln(Suma),
+    nl, not(true).
+
+mostrar_trabajadores_Puntaje(_, _):- true.
+
+
+%acumular� los puntos asociados a las tareas completadas.
+desarrollo_previo(Persona, Tipo, Contador) :-
+    findall(_, tarea(_, _, Tipo, _, Persona, _, _), TareasAsociadasF),
+    length(TareasAsociadasF, Contador).
+
+%cuenta la cantidad de tareas asociadas al proyecto y a la persona.
+afinidad_proyecto(Persona, Proyecto, Contador) :-
+    findall(_, tarea(_, Proyecto, _, _, Persona, _, _), TareasAsociadasProyecto),
+    length(TareasAsociadasProyecto, Contador).
+
+%calcula el rating de cada trabajador.
+rating(Nombre, Res) :-
+    persona(Nombre, _, _, Rating, _),str_to_int(Rating, Res), !.
+
+%Cuenta la cantidad de tareas abiertas que tiene el trabajador.
+tareas_abiertas(Persona, Contador) :-
+    findall(_, tarea(_, _, _, "pendiente", Persona, _, _), TareasAsociadasA),
+    length(TareasAsociadasA, Contador).
+
+extraer_tipo(Tarea, Res):-
+    tarea(Tarea, _, Tipo, _, _, _, _),
+    Res = Tipo.
