@@ -2,6 +2,8 @@
 :- dynamic(persona/5).
 :- dynamic(proyecto/5).
 :- dynamic(tarea/7).
+:- dynamic(puntaje/4).
+
 
 :- initialization(cargar_personas).
 :- initialization(cargar_proyectos).
@@ -670,30 +672,47 @@ validar_recomendaciones(_, Tarea) :- not(existe_tarea(Tarea)), writeln("La tarea
 %Extrae el tipo de la tarea y lo envia por parametro.
 validar_recomendaciones(Proyecto, Tarea) :-
     extraer_tipo(Tarea, Tipo),
-    mostrar_trabajadores_Puntaje(Proyecto, Tipo) , !.
+    crear_puntaje(Proyecto, Tipo),
+    ordenar_puntaje(Lista_ord),
+    imprimir_puntaje(Lista_ord),
+    borrar_puntaje, !.
 
-
-mostrar_trabajadores_Puntaje(Proyecto, Tipo) :-
+%creamos los hechos con el puntaje relacionado.
+crear_puntaje(Proyecto, Tipo) :-
     persona(Persona, Puesto, Costo, _, Lista),
     member(Tipo, Lista),
-
     desarrollo_previo(Persona, Tipo, DP),
     afinidad_proyecto(Persona, Proyecto, AP),
     rating(Persona, Rating),
     tareas_abiertas(Persona, TA),
     Suma is (DP * 2) + (AP * 5) + Rating - (TA * 3),
+    asserta(puntaje(Suma, Persona, Puesto, Costo)),
+    not(true).
+%retorno true para evitar enciclados.
+crear_puntaje(_, _):- true.
 
-    write('Nombre: '), writeln(Persona),
+%aux de retorn true.
+imprimir_puntaje([]) :- true.
+%imprime el puntaje.
+imprimir_puntaje([Suma-Persona-Puesto-Costo | Resto]) :-
+    puntaje(Suma, Persona, Puesto, Costo),
+    write('Puntaje: '), writeln(Suma),
+    write('Persona: '), writeln(Persona),
     write('Puesto: '), writeln(Puesto),
     write('Costo: '), writeln(Costo),
-    write('Rating: '), writeln(Rating),
-    write('Puntaje resultado: '), writeln(Suma),
-    nl, not(true).
+    write('\n'),
+    imprimir_puntaje(Resto).
 
-mostrar_trabajadores_Puntaje(_, _):- true.
+%borrar los hechos de puntaje.
+borrar_puntaje :-
+    retractall(puntaje(_, _, _, _)).
 
+%Se encarga de ordenar el puntaje en base a los hechos.
+ordenar_puntaje(ListaOrdenada) :-
+    findall(Suma-Persona-Puesto-Costo, puntaje(Suma, Persona, Puesto, Costo), Lista),
+    sort(1, @>=, Lista, ListaOrdenada).
 
-%acumular� los puntos asociados a las tareas completadas.
+%acumulacion los puntos asociados a las tareas completadas.
 desarrollo_previo(Persona, Tipo, Contador) :-
     findall(_, tarea(_, _, Tipo, _, Persona, _, _), TareasAsociadasF),
     length(TareasAsociadasF, Contador).
