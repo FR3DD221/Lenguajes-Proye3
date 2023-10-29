@@ -53,6 +53,7 @@ menu:-
     writeln('5. Recomendaciones'),
     writeln('6. Asignar tarea'),
     writeln('7. Cerrar tarea'),
+    writeln('8. Estadisticas'),
     writeln('9. Salir'),
     write('Ingrese su opcion deseada: '),
     read_line_to_string(user_input, Opcion), nl, comprobarOpcionMenuMain(Opcion).
@@ -65,6 +66,7 @@ comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "4"), menu_buscar_tarea, 
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "5"), menu_recomendar, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "6"), asignarTarea, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "7"), cerrarTarea, menu.
+comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "8"), write('Estadistica A'), estadisticaA, write('\nEstadistica A'), estadisticaB, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "9").
 comprobarOpcionMenuMain(_):- writeln('Opcion invalida. Por favor, ingrese una opcion valida.'), nl, menu.
 
@@ -87,14 +89,14 @@ imprimirPersonas :-
     write('Rating: '), writeln(Rating),
     writeln('\nTareas en la trabaja/o\n'),
     imprimirPersonasAux(Nombre),
-    nl, not(true).
+    nl, fail.
 imprimirPersonas :- true.
 
 imprimirPersonasAux(Nombre):-
     tarea(Tarea, Proyecto, _, _, Nombre, _, _),
     write('Nombre de la tarea: '), writeln(Tarea),
     write('Nombre del proyecto: '), writeln(Proyecto),
-    nl, not(true).
+    nl, fail.
 
 
 %Funcion que pide los datos al usuario sobre un nuevo empleado
@@ -309,8 +311,21 @@ imprimirProyectos :-
     write('Presupuesto: '), writeln(Presupuesto),
     write('Fecha inicio: '), writeln(FechaIni),
     write('Fecha finalizacion: '), writeln(FechaFin),
-    nl, not(true).
+    write('El costo total del proyecto es: '), 
+    calcularCosto(Nombre, Costo), write(Costo), nl,
+    nl, fail.
 imprimirProyectos :- true.
+
+
+% Predicado para calcular el costo total de un proyecto
+calcularCosto(NombreProyecto, CostoTotal) :-
+    findall(Pago, (
+        tarea(_, NombreProyecto, _, _, Encargado, _, _),
+        persona(Encargado, _, PagoStr, _, _),
+        atom_number(PagoStr, Pago)
+    ), Pagos),
+    sum_list(Pagos, CostoTotal).
+
 
 % Predicado para recortar una subcadena de una cadena dada
 % El start es la posicion antes de donde quieras recortar
@@ -460,7 +475,10 @@ asignarTareaAux(Proyecto, Tarea, _):- tarea(Tarea, Proyecto, _, _, Persona, _, _
     writeln('!!Error -> la tarea ya tiene encargado <- Error!!'), nl.
 
 asignarTareaAux(Proyecto, Tarea, Persona):- retract(tarea(Tarea, Proyecto, Tipo, _, _, Fecha_inicio, Fecha_final)),
-    asserta(tarea(Tarea, Proyecto, Tipo, 'activa', Persona, Fecha_inicio, Fecha_final)), writeln('Tarea asignada con exito!!'), nl.
+    asserta(tarea(Tarea, Proyecto, Tipo, 'activa', Persona, Fecha_inicio, Fecha_final)), 
+    actualizarTareas,
+    writeln('Tarea asignada con exito!!'), nl.
+
 
 %Funcion que se encargar de pedir los datos para cerrar una tarea, ademas los valida
 cerrarTarea:- write('Ingrese el nombre del proyecto: '), read_line_to_string(user_input, Proyecto), nl,
@@ -567,7 +585,8 @@ cerrarTareaAux(Proyecto, _, FechaIni):- proyecto(Proyecto, _, _, _, FechaIni),
     writeln('Formato invalido -> La fecha de fin no puede ser mayor o igual a la fecha de fin del proyecto'), nl.
 
 cerrarTareaAux(Proyecto, Tarea, FechaFin):- retract(tarea(Tarea, Proyecto, Tipo, _, Persona, Fecha_inicio, _)),
-    asserta(tarea(Tarea, Proyecto, Tipo, 'finalizada', Persona, Fecha_inicio, FechaFin)), writeln('Tarea cerrada con exito!!'), nl.
+    asserta(tarea(Tarea, Proyecto, Tipo, 'finalizada', Persona, Fecha_inicio, FechaFin)), actualizarTareas, 
+    writeln('Tarea cerrada con exito!!'), nl.
 
 %============================Commit
 %===============================
@@ -753,3 +772,47 @@ validar_vigencia_fecha(Fecha_validar, Fecha_inicio, Fecha_fin) :-
 
 fecha_mayor_o_igual(Year1, Month1, Day1, Year2, Month2, Day2) :-
     (Year1 > Year2; (Year1 = Year2, (Month1 > Month2; (Month1 = Month2, Day1 >= Day2)))).
+
+
+actualizarTareas :-
+    findall(tarea(Tarea, Proyecto, Tipo, Estado, Cargo, Fecha_inicio, Fecha_final), 
+            tarea(Tarea, Proyecto, Tipo, Estado, Cargo, Fecha_inicio, Fecha_final), 
+            Tareas),
+    borrarContenidoArchivo('tareas.txt'), % Borra el contenido del archivo
+    guardar_hechos_en_archivo(Tareas, 'tareas.txt').
+
+borrarContenidoArchivo(NombreArchivo) :-
+    open(NombreArchivo, write, Stream), 
+    write(Stream, ''),   
+    close(Stream).                     
+
+
+guardar_hechos_en_archivo([], _).
+guardar_hechos_en_archivo([Hecho|Resto], NombreArchivo) :-
+    open(NombreArchivo, append, Stream),
+    writeq(Stream, Hecho), write(Stream, '.\n'),
+    guardar_hechos_en_archivo(Resto, NombreArchivo),
+    close(Stream).
+
+
+estadisticaA:- proyecto(Nombre, _, Presupuesto, _, _), estadisticaAaux(Nombre, Presupuesto), fail.
+
+estadisticaA :- true.
+
+estadisticaAaux(Nombre, Presupuesto):- calcularCosto(Nombre, Costo), atom_number(Presupuesto, Number),
+    Costo > Number, write('\nEl proyecto '), write(Nombre), write(' esta sobre costo'), nl, nl.
+
+estadisticaAaux(Nombre, Presupuesto):- calcularCosto(Nombre, Costo), atom_number(Presupuesto, Number),
+    Number > Costo, write('\nEl proyecto '), write(Nombre), write(' esta bajo costo'), nl, nl.
+
+estadisticaAaux(Nombre, Presupuesto):- calcularCosto(Nombre, Costo), atom_number(Presupuesto, Number),
+    Number = Costo, write('\nEl proyecto '), write(Nombre), write(' esta tablas'), nl, nl.
+
+estadisticaB:- persona(Nombre, _, _, _, _),
+    findall(_,
+        (tarea(_, _, _, _, Nombre, _, _)),
+        Tareas
+    ), length(Tareas, Cantidad), write(Nombre),
+    write(' ha participado en '), write(Cantidad), write(' tareas'), nl, fail.
+
+estadisticaB :- true.
