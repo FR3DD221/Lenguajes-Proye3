@@ -66,7 +66,7 @@ comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "4"), menu_buscar_tarea, 
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "5"), menu_recomendar, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "6"), asignarTarea, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "7"), cerrarTarea, menu.
-comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "8"), write('Estadistica A'), estadisticaA, write('\nEstadistica A'), estadisticaB, menu.
+comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "8"), write('Estadistica A'), estadisticaA, writeln('\nEstadistica B'), estadisticaB, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "9").
 comprobarOpcionMenuMain(_):- writeln('Opcion invalida. Por favor, ingrese una opcion valida.'), nl, menu.
 
@@ -523,17 +523,6 @@ cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, Fech
     not(Number6 < Number5),
     writeln('Formato invalido -> La fecha de inicio no puede ser mayor a la fecha de fin'), nl.
 
-cerrarTareaAux(Proyecto, Tarea, FechaFin):- tarea(Tarea, Proyecto, _, _, _, FechaIni, _),
-    substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
-    atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 = Number2,
-    substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
-    atom_number(Cadena3, Number3), atom_number(Cadena4, Number4), Number4 =< Number3,
-    substring(Cadena5, 6, 4,FechaIni), substring(Cadena6, 6, 4,FechaFin),
-    atom_number(Cadena5, Number5), atom_number(Cadena6, Number6),
-    not(Number6 < Number5),
-    writeln('Formato invalido -> La fecha de inicio no puede ser mayor o igual a la fecha de fin'), nl.
-
-
 cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 > Number2,
@@ -574,7 +563,7 @@ cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     (Number6 = Number5),
     writeln('Formato invalido -> La fecha de fin no puede ser igual a la fecha de fin del proyecto'), nl.
 
-cerrarTareaAux(Proyecto, _, FechaIni):- proyecto(Proyecto, _, _, _, FechaIni),
+cerrarTareaAux(Proyecto, _, FechaFin):- proyecto(Proyecto, _, _, _, FechaIni),
     substring(Cadena1, 0, 2, FechaIni), substring(Cadena2, 0, 2, FechaFin),
     atom_number(Cadena1, Number1), atom_number(Cadena2, Number2), Number1 = Number2,
     substring(Cadena3, 3, 2, FechaIni), substring(Cadena4, 3, 2, FechaFin),
