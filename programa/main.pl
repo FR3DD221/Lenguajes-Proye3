@@ -66,7 +66,7 @@ comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "4"), menu_buscar_tarea, 
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "5"), menu_recomendar, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "6"), asignarTarea, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "7"), cerrarTarea, menu.
-comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "8"), write('Estadistica A'), estadisticaA, writeln('\nEstadistica B'), estadisticaB, menu.
+comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "8"), write('Estadistica A'), estadisticaA, writeln('\nEstadistica B'), estadisticaB, nl, menu.
 comprobarOpcionMenuMain(Opcion):- string_lower(Opcion, "9").
 comprobarOpcionMenuMain(_):- writeln('Opcion invalida. Por favor, ingrese una opcion valida.'), nl, menu.
 
